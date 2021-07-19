@@ -2,25 +2,29 @@ import { createMachine, assign } from 'xstate';
 import { useMachine } from '@xstate/react';
 
 const DEFAULT_SCORE_INCREASE_ON_WIN = 1;
-const DEFAULT_DECK_SIZE = 52;
 
 const GameStateMessages = {
   IDLE: 'Ваша ставка',
   TURN_WIN: 'Вы выиграли',
   TURN_LOSE: 'Вы проиграли',
+  GAME_COMPLETED: 'Ваш результат',
 }
 
-const checkCanPlay = (context) => context.cardDeckLength > context.currentCardIndex;
+const checkCanPlay = (context, event) => event.remainingCardsAmount > 0;
 
 const makeWinTurn = assign({
-  userScore: (context, event) => context.userScore + DEFAULT_SCORE_INCREASE_ON_WIN,
-  currentCardIndex: (context, event) => context.currentCardIndex + 1,
+  userScore: (context) => context.userScore + DEFAULT_SCORE_INCREASE_ON_WIN,
+  remainingCardsAmount: (context, event) => event.remainingCardsAmount,
   gameStateMessage: GameStateMessages.TURN_WIN,
 });
 
 const makeLoseTurn = assign({
-  currentCardIndex: (context, event) => context.currentCardIndex + 1,
+  remainingCardsAmount: (context, event) => event.remainingCardsAmount,
   gameStateMessage: GameStateMessages.TURN_LOSE,
+});
+
+const completeGame = assign({
+  gameStateMessage: (context) => `${GameStateMessages.GAME_COMPLETED}: ${context.userScore}`,
 });
 
 const cardDeckGameMachine = createMachine({
@@ -28,7 +32,6 @@ const cardDeckGameMachine = createMachine({
   initial: 'idle',
   context: {
     userScore: 0,
-    remaningCardsAmount: DEFAULT_DECK_SIZE,
     gameStateMessage: GameStateMessages.IDLE,
   },
   states: {
@@ -97,6 +100,7 @@ const cardDeckGameMachine = createMachine({
 
     completed: {
       type: 'final',
+      entry: completeGame,
     }
   }
 });

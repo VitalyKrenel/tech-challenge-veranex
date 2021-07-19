@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import styled, { createGlobalStyle } from 'styled-components';
+import styled, { createGlobalStyle, css } from 'styled-components';
 import { useCardDeckGameMachine } from './gameState';
 import { CardDeckApi } from './cardDeckApi';
 
@@ -53,25 +53,29 @@ const GameStateLabel = styled.p`
 const GameCardContainer = styled.div`
   position: relative;
   margin-bottom: 36px;
+  height: 314px;
 
-  &::after {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  ${({ shouldUsePlaceholder }) => shouldUsePlaceholder && css`
+    background-color: ${cardPlaceholderBgColor};
 
-    font-size: 72px;
-    font-weight: bold;
-    content: '?';
-  }
+    &::after {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+
+      font-size: 72px;
+      font-weight: bold;
+      content: '?';
+    }
+  `}
 `;
 
 const cardPlaceholderBgColor = '#D8D8D8';
 
 const GameCard = styled.img`
   width: 100%;
-  height: 314px;
-  background-color: ${cardPlaceholderBgColor};
+  height: 100%;
 `;
 
 const actionButtonColor = '#fff';
@@ -117,24 +121,35 @@ const GameRestartButton = styled.button`
 
 const App = () => {
   const [isCardDeckFetching, setIsCardDeckFetching] = useState(true);
-  const [cardDeck, setCardDeck] = useState({});
+  const [cardDeckId, setCardDeckId] = useState(null);
+  const [lastDrawnCard, setLastDrawnCard] = useState(null);
 
   const [currentState, sendEvent] = useCardDeckGameMachine();
-  const { gameStateMessage } = currentState.context;
-  console.log(currentState.context)
+  const { remainingCardsAmount, gameStateMessage } = currentState.context;
 
-  const handleUserCardChoice = () => sendEvent({ type: Math.random() > 0.5 ? 'LOSE' : 'WIN' });
+  const chooseCard = async ({ cardColor } = {}) => {
+    const { card: drawnCard, deck } = await CardDeckApi.drawCard({ cardDeckId });
+    setLastDrawnCard(drawnCard, deck.remainingCardsAmount);
+
+    if (drawnCard.color === cardColor) {
+      sendEvent({ type: 'WIN', remainingCardsAmount: deck.remainingCardsAmount });
+      return;
+    }
+
+    sendEvent({ type: 'LOSE', remainingCardsAmount: deck.remainingCardsAmount });
+  }
 
   useEffect(() => {
     const initGame = async () => {
       const cardDeck = await CardDeckApi.createCardDeck();
 
-      setCardDeck(cardDeck);
+      setCardDeckId(cardDeck.id);
       setIsCardDeckFetching(false);
     };
 
     initGame();
   }, []);
+
 
   return (
     <>
@@ -148,16 +163,20 @@ const App = () => {
             <GameStateLabel>
               {gameStateMessage}
             </GameStateLabel>
-            <GameCardContainer>
-              <GameCard />
+            <GameCardContainer shouldUsePlaceholder={lastDrawnCard === null}>
+              <GameCard src={lastDrawnCard?.imageSource}/>
             </GameCardContainer>
             <ActionButtonsContainer>
-              <StakeRedActionButton onClick={handleUserCardChoice}>Red</StakeRedActionButton>
-              <StakeBlackActionButton onClick={handleUserCardChoice}>Black</StakeBlackActionButton>
+              <StakeRedActionButton onClick={() => chooseCard({ cardColor: 'RED' })}>Red</StakeRedActionButton>
+              <StakeBlackActionButton onClick={() => chooseCard({ cardColor: 'BLACK' })}>Black</StakeBlackActionButton>
             </ActionButtonsContainer>
           </GameContainer>
           <CardDeckStatusLabel>
-            Колода пуста. <GameRestartButton>Начать заново?</GameRestartButton>
+            {remainingCardsAmount > 0 ? (
+              <>Количество карт в колоде: {remainingCardsAmount}</>
+            ) : (
+              <>Колода пуста. <GameRestartButton>Начать заново?</GameRestartButton></>
+            )}
           </CardDeckStatusLabel>
         </>
       )}
