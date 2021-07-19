@@ -1,4 +1,5 @@
 import styled, { createGlobalStyle } from 'styled-components';
+import { useCardDeckGameMachine } from './gameState';
 
 const AppDefaultStyles = createGlobalStyle`
   html {
@@ -112,27 +113,35 @@ const GameRestartButton = styled.button`
   font-style: italic;
 `;
 
-const App = () => (
-  <>
-  <AppDefaultStyles/>
-  <AppLayout>
-    <GameContainer>
-      <GameStateLabel>
-        Ваша ставка
-      </GameStateLabel>
-      <GameCardContainer>
-        <GameCard />
-      </GameCardContainer>
-      <ActionButtonsContainer>
-        <StakeRedActionButton>Red</StakeRedActionButton>
-        <StakeBlackActionButton>Black</StakeBlackActionButton>
-      </ActionButtonsContainer>
-    </GameContainer>
-    <CardDeckStatusLabel>
-      Колода пуста. <GameRestartButton>Начать заново?</GameRestartButton>
-    </CardDeckStatusLabel>
-  </AppLayout>
-  </>
-);
+const App = () => {
+  const [currentState, sendEvent] = useCardDeckGameMachine();
+  const { gameStateMessage } = currentState.context;
+  console.log(currentState.context)
+
+  const handleUserCardChoice = () => sendEvent({ type: Math.random() > 0.5 ? 'LOSE' : 'WIN' });
+
+  return (
+    <>
+    <AppDefaultStyles/>
+    <AppLayout>
+      <GameContainer>
+        <GameStateLabel>
+          {gameStateMessage}
+        </GameStateLabel>
+        <GameCardContainer>
+          <GameCard />
+        </GameCardContainer>
+        <ActionButtonsContainer>
+          <StakeRedActionButton onClick={handleUserCardChoice}>Red</StakeRedActionButton>
+          <StakeBlackActionButton onClick={handleUserCardChoice}>Black</StakeBlackActionButton>
+        </ActionButtonsContainer>
+      </GameContainer>
+      <CardDeckStatusLabel>
+        Колода пуста. <GameRestartButton>Начать заново?</GameRestartButton>
+      </CardDeckStatusLabel>
+    </AppLayout>
+    </>
+  )
+};
 
 export { App };
