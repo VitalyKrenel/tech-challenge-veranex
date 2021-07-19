@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import { useCardDeckGameMachine } from './gameState';
+import { CardDeckApi } from './cardDeckApi';
 
 const AppDefaultStyles = createGlobalStyle`
   html {
@@ -114,31 +116,52 @@ const GameRestartButton = styled.button`
 `;
 
 const App = () => {
+  const [isCardDeckFetching, setIsCardDeckFetching] = useState(true);
+  const [cardDeck, setCardDeck] = useState({});
+
   const [currentState, sendEvent] = useCardDeckGameMachine();
   const { gameStateMessage } = currentState.context;
   console.log(currentState.context)
 
   const handleUserCardChoice = () => sendEvent({ type: Math.random() > 0.5 ? 'LOSE' : 'WIN' });
 
+  useEffect(() => {
+    const initGame = async () => {
+      const cardDeck = await CardDeckApi.createCardDeck();
+
+      setCardDeck(cardDeck);
+      setIsCardDeckFetching(false);
+    };
+
+    initGame();
+  }, []);
+
   return (
     <>
     <AppDefaultStyles/>
     <AppLayout>
-      <GameContainer>
-        <GameStateLabel>
-          {gameStateMessage}
-        </GameStateLabel>
-        <GameCardContainer>
-          <GameCard />
-        </GameCardContainer>
-        <ActionButtonsContainer>
-          <StakeRedActionButton onClick={handleUserCardChoice}>Red</StakeRedActionButton>
-          <StakeBlackActionButton onClick={handleUserCardChoice}>Black</StakeBlackActionButton>
-        </ActionButtonsContainer>
-      </GameContainer>
-      <CardDeckStatusLabel>
-        Колода пуста. <GameRestartButton>Начать заново?</GameRestartButton>
-      </CardDeckStatusLabel>
+      {isCardDeckFetching ? (
+        <p>Загружаем колоду...</p>
+      ) : (
+        <>
+          <GameContainer>
+            <GameStateLabel>
+              {gameStateMessage}
+            </GameStateLabel>
+            <GameCardContainer>
+              <GameCard />
+            </GameCardContainer>
+            <ActionButtonsContainer>
+              <StakeRedActionButton onClick={handleUserCardChoice}>Red</StakeRedActionButton>
+              <StakeBlackActionButton onClick={handleUserCardChoice}>Black</StakeBlackActionButton>
+            </ActionButtonsContainer>
+          </GameContainer>
+          <CardDeckStatusLabel>
+            Колода пуста. <GameRestartButton>Начать заново?</GameRestartButton>
+          </CardDeckStatusLabel>
+        </>
+      )}
+
     </AppLayout>
     </>
   )

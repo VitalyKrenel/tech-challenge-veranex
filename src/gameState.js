@@ -2,6 +2,7 @@ import { createMachine, assign } from 'xstate';
 import { useMachine } from '@xstate/react';
 
 const DEFAULT_SCORE_INCREASE_ON_WIN = 1;
+const DEFAULT_DECK_SIZE = 52;
 
 const GameStateMessages = {
   IDLE: 'Ваша ставка',
@@ -27,9 +28,7 @@ const cardDeckGameMachine = createMachine({
   initial: 'idle',
   context: {
     userScore: 0,
-    isGameSessionCompleted: false,
-    cardDeckLength: 52,
-    currentCardIndex: 0,
+    remaningCardsAmount: DEFAULT_DECK_SIZE,
     gameStateMessage: GameStateMessages.IDLE,
   },
   states: {
