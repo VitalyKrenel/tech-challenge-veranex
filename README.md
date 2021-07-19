@@ -1,70 +1,83 @@
-# Getting Started with Create React App
+## Cards Deck on React
+Задача: Написать небольшую карточную игру на React
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Для имитации колоды карт и розыгрыша Вы будете использовать следующий API — https://deckofcardsapi.com/.
+Пройдя по ссылке, можно получить исчерпывающую информацию об API.
 
-## Available Scripts
+Пример запроса:
+https://deckofcardsapi.com/api/deck/${deck_id}/draw/?count=2
 
-In the project directory, you can run:
+Совет: Заменив ${deck_id} на значение new, вы перетасуете колоду и отрисуете карту из этой колоды.
 
-### `yarn start`
+Суть игры:
+Игрок делает ставки либо на красную, либо на черную колоду, и, если вытянутая карта будет выбранного цвета, то игрок получает очко, в противном случае — ничего.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+UI:
+Экран игры содержит следующие разделы:
+1. Текущее состояние игры
+2. Карта — разыгранная ранее или первоначальная, плейсхолдер под карту.
+3. Две кнопки — красного (Черви, Бубны) и черного (Трефы, Пики) цвета
+4. Количество карт, оставшихся в колоде; Кнопка для решафла колоды.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Возможные состояния игры:
+1. Ваша ставка
+2. Вы выиграли
+3. Вы проиграли
+4. Ваш счет: ${won}/52
 
-### `yarn test`
+Размеры плейсхолдера\карты — 226x314 (px)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-### `yarn build`
+## Decomposition
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Game Screen
+  Screen label
+    -> Your turn label
+    -> You win label
+    -> You lose label
+    -> Your Result #/# label
+  Card
+    -> Unknown card placeholder
+    -> Card with image
+  Action Buttons
+    -> [Red] Stake on Red card
+    -> [Black] Stake on Black card
+  CardDeckStatus
+    -> # cards in Deck
+    -> Empty card deck
+      -> Restart Button
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Scenarios
+  1. Start Game
+    - Deck has 52 cards
+    - User clicks on [Red] or [Black] button
+    - Unknown card placeholder is replaced with random card
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+    Code:
+      - Request new cards deck using
+      https://deckofcardsapi.com/api/deck/new/
+      - Store card deck id in the store
+      - Request a list of cards for this card deck using
+      https://deckofcardsapi.com/api/deck/<<deck id>>/draw/?count=52
 
-### `yarn eject`
+  2. Stake on Card
+    - Receive user's choice
+    - Take the deck of card
+    - Get the next card from the top of the deck
+    - Compare user's choice and the top card
+    - If match, add points to user score AND draw "You win" label
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+    Code:
+      - handle user stake event
+      - get card under currentCardIndex index
+      - compare received input and deck[currentCardIndex]
+      - calculate result (wether the guess is correct)
+      - add points (0 or 1) to user score
+      - decrease the number of available cards in the deck
+      - check whether there are more available cards
+        - if not, go to state scenario 3
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `yarn build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+  3. Finish game
+      - draw the score on the screen
+      - disable the action buttons
+      - draw the restart
