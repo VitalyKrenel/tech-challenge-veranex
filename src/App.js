@@ -108,7 +108,7 @@ const StakeRedActionButton = styled(ActionButton)`
 
 const StakeBlackActionButton = styled(ActionButton)``;
 
-const CardDeckStatusLabel = styled.p``;
+const GameProgressMessage = styled.p``;
 const GameRestartButton = styled.button`
   display: inline;
   background-color: transparent;
@@ -119,24 +119,26 @@ const GameRestartButton = styled.button`
   font-style: italic;
 `;
 
+const checkIsPlayableCardDeck = (remainingDeckSize) => remainingDeckSize > 0;
+
 const App = () => {
   const [isCardDeckFetching, setIsCardDeckFetching] = useState(true);
   const [cardDeckId, setCardDeckId] = useState(null);
   const [lastDrawnCard, setLastDrawnCard] = useState(null);
 
   const [currentState, sendEvent] = useCardDeckGameMachine();
-  const { remainingCardsAmount, gameStateMessage } = currentState.context;
+  const { remainingDeckSize, gameStateMessage } = currentState.context;
 
   const chooseCard = async ({ cardColor } = {}) => {
-    const { card: drawnCard, deck } = await CardDeckApi.drawCard({ cardDeckId });
-    setLastDrawnCard(drawnCard, deck.remainingCardsAmount);
+    const { card: drawnCard } = await CardDeckApi.drawCard({ cardDeckId });
+    setLastDrawnCard(drawnCard);
 
     if (drawnCard.color === cardColor) {
-      sendEvent({ type: 'WIN', remainingCardsAmount: deck.remainingCardsAmount });
+      sendEvent({ type: 'WIN' });
       return;
     }
 
-    sendEvent({ type: 'LOSE', remainingCardsAmount: deck.remainingCardsAmount });
+    sendEvent({ type: 'LOSE' });
   }
 
   useEffect(() => {
@@ -171,13 +173,15 @@ const App = () => {
               <StakeBlackActionButton onClick={() => chooseCard({ cardColor: 'BLACK' })}>Black</StakeBlackActionButton>
             </ActionButtonsContainer>
           </GameContainer>
-          <CardDeckStatusLabel>
-            {remainingCardsAmount > 0 ? (
-              <>Количество карт в колоде: {remainingCardsAmount}</>
-            ) : (
-              <>Колода пуста. <GameRestartButton>Начать заново?</GameRestartButton></>
-            )}
-          </CardDeckStatusLabel>
+          {checkIsPlayableCardDeck(remainingDeckSize) ? (
+            <GameProgressMessage>Количество карт в колоде: {remainingDeckSize}</GameProgressMessage>
+          ) : (
+            <GameProgressMessage>
+              Колода пуста.
+              {' '}
+              <GameRestartButton>Начать заново?</GameRestartButton>
+            </GameProgressMessage>
+          )}
         </>
       )}
 
