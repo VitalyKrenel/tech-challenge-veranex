@@ -31,7 +31,7 @@ UI:
 ## Decomposition
 
 Game Screen
-  Screen label
+  App Action Label
     -> Your turn label
     -> You win label
     -> You lose label
