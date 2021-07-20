@@ -3,6 +3,8 @@ import styled, { css } from 'styled-components';
 import { useCardDeckGameMachine } from './gameState';
 import { CardDeckApi } from './cardDeckApi';
 
+import { checkDidPlayerBetWin } from 'domain/deckGameCases/checkDidPlayerBetWin';
+
 import { LoadingIndicator } from './components/LoadingIndicator';
 import { AppLayout } from './components/AppLayout';
 import { GameProgressMessage } from './components/GameProgressMessage';
@@ -76,37 +78,46 @@ const StakeRedActionButton = styled(ActionButton)`
 
 const StakeBlackActionButton = styled(ActionButton)``;
 
-const App = () => {
+const useCardDeck = () => {
   const [isCardDeckFetching, setIsCardDeckFetching] = useState(true);
   const [cardDeckId, setCardDeckId] = useState(null);
-  const [lastDrawnCard, setLastDrawnCard] = useState(null);
-
-  const [currentState, sendEvent] = useCardDeckGameMachine();
-  const { remainingDeckSize, gameStateMessage } = currentState.context;
-
-  const chooseCard = async ({ cardColor } = {}) => {
-    const { card: drawnCard } = await CardDeckApi.drawCard({ cardDeckId });
-    setLastDrawnCard(drawnCard);
-
-    if (drawnCard.color === cardColor) {
-      sendEvent({ type: 'WIN' });
-      return;
-    }
-
-    sendEvent({ type: 'LOSE' });
-  }
 
   useEffect(() => {
-    const initGame = async () => {
+    const fetchCardDeck = async () => {
       const cardDeck = await CardDeckApi.createCardDeck();
 
       setCardDeckId(cardDeck.id);
       setIsCardDeckFetching(false);
     };
 
-    initGame();
+    fetchCardDeck();
   }, []);
 
+  return {
+    cardDeckId,
+    isCardDeckFetching,
+  };
+}
+
+const App = () => {
+  const [lastDrawnCard, setLastDrawnCard] = useState(null);
+  const { cardDeckId, isCardDeckFetching } = useCardDeck();
+
+  const [currentState, sendEvent] = useCardDeckGameMachine();
+  const { remainingDeckSize, gameStateMessage } = currentState.context;
+  console.log(currentState, remainingDeckSize)
+
+  const chooseCard = async ({ cardColor } = {}) => {
+    const drawnCard = await CardDeckApi.drawCard({ cardDeckId });
+    setLastDrawnCard(drawnCard);
+
+    if (checkDidPlayerBetWin(cardColor, drawnCard)) {
+      sendEvent({ type: 'WIN' });
+      return;
+    }
+
+    sendEvent({ type: 'LOSE' });
+  }
 
   return (
     <AppLayout loadingComponent={LoadingIndicator} isAppLoading={isCardDeckFetching}>
