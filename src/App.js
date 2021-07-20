@@ -1,43 +1,9 @@
 import { useEffect, useState } from 'react';
-import styled, { createGlobalStyle, css } from 'styled-components';
+import styled, { css } from 'styled-components';
 import { useCardDeckGameMachine } from './gameState';
 import { CardDeckApi } from './cardDeckApi';
-
-const AppDefaultStyles = createGlobalStyle`
-  html {
-    font-family: Roboto, sans-serif;
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  body {
-    margin: 0;
-    padding: 0;
-  }
-
-  *,
-  *:after,
-  *:before {
-    box-sizing: inherit;
-  }
-`;
-
-const appBgColor = '#427937';
-const appPrimaryColor = '#000000';
-
-const AppLayout = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  padding-top: 45px;
-  width: 100%;
-  height: 100vh;
-
-  background-color: ${appBgColor};
-  color: ${appPrimaryColor};
-`;
+import { LoadingIndicator } from './components/LoadingIndicator';
+import { AppLayout } from './components/AppLayout';
 
 const GameContainer = styled.div`
   width: 226px;
@@ -154,39 +120,29 @@ const App = () => {
 
 
   return (
-    <>
-    <AppDefaultStyles/>
-    <AppLayout>
-      {isCardDeckFetching ? (
-        <p>Загружаем колоду...</p>
+    <AppLayout loadingComponent={LoadingIndicator} isAppLoading={isCardDeckFetching}>
+      <GameContainer>
+        <GameStateLabel>
+          {gameStateMessage}
+        </GameStateLabel>
+        <GameCardContainer shouldUsePlaceholder={lastDrawnCard === null}>
+          <GameCard src={lastDrawnCard?.imageSource}/>
+        </GameCardContainer>
+        <ActionButtonsContainer>
+          <StakeRedActionButton onClick={() => chooseCard({ cardColor: 'RED' })}>Red</StakeRedActionButton>
+          <StakeBlackActionButton onClick={() => chooseCard({ cardColor: 'BLACK' })}>Black</StakeBlackActionButton>
+        </ActionButtonsContainer>
+      </GameContainer>
+      {checkIsPlayableCardDeck(remainingDeckSize) ? (
+        <GameProgressMessage>Количество карт в колоде: {remainingDeckSize}</GameProgressMessage>
       ) : (
-        <>
-          <GameContainer>
-            <GameStateLabel>
-              {gameStateMessage}
-            </GameStateLabel>
-            <GameCardContainer shouldUsePlaceholder={lastDrawnCard === null}>
-              <GameCard src={lastDrawnCard?.imageSource}/>
-            </GameCardContainer>
-            <ActionButtonsContainer>
-              <StakeRedActionButton onClick={() => chooseCard({ cardColor: 'RED' })}>Red</StakeRedActionButton>
-              <StakeBlackActionButton onClick={() => chooseCard({ cardColor: 'BLACK' })}>Black</StakeBlackActionButton>
-            </ActionButtonsContainer>
-          </GameContainer>
-          {checkIsPlayableCardDeck(remainingDeckSize) ? (
-            <GameProgressMessage>Количество карт в колоде: {remainingDeckSize}</GameProgressMessage>
-          ) : (
-            <GameProgressMessage>
-              Колода пуста.
-              {' '}
-              <GameRestartButton>Начать заново?</GameRestartButton>
-            </GameProgressMessage>
-          )}
-        </>
+        <GameProgressMessage>
+          Колода пуста.
+          {' '}
+          <GameRestartButton>Начать заново?</GameRestartButton>
+        </GameProgressMessage>
       )}
-
     </AppLayout>
-    </>
   )
 };
 
