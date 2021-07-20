@@ -37,13 +37,16 @@ const AppBaseLayout = styled.div`
 `;
 
 const AppLayout = ({ isAppLoading, loadingComponent: LoadingComponent, children }) => (
-  <AppBaseLayout>
-    {isAppLoading ? (
-      <LoadingComponent />
-    ) : (
-      children
-    )}
-  </AppBaseLayout>
+  <>
+    <AppDefaultStyles/>
+    <AppBaseLayout>
+      {isAppLoading ? (
+        <LoadingComponent />
+      ) : (
+        children
+      )}
+    </AppBaseLayout>
+  </>
 );
 
 export { AppLayout };

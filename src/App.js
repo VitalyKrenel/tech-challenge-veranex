@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { useCardDeckGameMachine } from './gameState';
 import { CardDeckApi } from './cardDeckApi';
+
 import { LoadingIndicator } from './components/LoadingIndicator';
 import { AppLayout } from './components/AppLayout';
+import { GameProgressMessage } from './components/GameProgressMessage';
 
 const GameContainer = styled.div`
   width: 226px;
@@ -74,19 +76,6 @@ const StakeRedActionButton = styled(ActionButton)`
 
 const StakeBlackActionButton = styled(ActionButton)``;
 
-const GameProgressMessage = styled.p``;
-const GameRestartButton = styled.button`
-  display: inline;
-  background-color: transparent;
-  border: none;
-  padding: 0;
-
-  font-weight: bold;
-  font-style: italic;
-`;
-
-const checkIsPlayableCardDeck = (remainingDeckSize) => remainingDeckSize > 0;
-
 const App = () => {
   const [isCardDeckFetching, setIsCardDeckFetching] = useState(true);
   const [cardDeckId, setCardDeckId] = useState(null);
@@ -133,15 +122,7 @@ const App = () => {
           <StakeBlackActionButton onClick={() => chooseCard({ cardColor: 'BLACK' })}>Black</StakeBlackActionButton>
         </ActionButtonsContainer>
       </GameContainer>
-      {checkIsPlayableCardDeck(remainingDeckSize) ? (
-        <GameProgressMessage>Количество карт в колоде: {remainingDeckSize}</GameProgressMessage>
-      ) : (
-        <GameProgressMessage>
-          Колода пуста.
-          {' '}
-          <GameRestartButton>Начать заново?</GameRestartButton>
-        </GameProgressMessage>
-      )}
+      <GameProgressMessage remainingDeckSize={remainingDeckSize}/>
     </AppLayout>
   )
 };
