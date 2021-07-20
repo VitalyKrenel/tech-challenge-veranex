@@ -29,7 +29,7 @@ UI:
 
 
 ## Decomposition
-
+```
 Game Screen
   App Action Label
     -> Your turn label
@@ -46,6 +46,7 @@ Game Screen
     -> # cards in Deck
     -> Empty card deck
       -> Restart Button
+```
 
 Scenarios
   1. Start Game
