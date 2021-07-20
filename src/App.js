@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { useCardDeckGameMachine } from './gameState';
 import { CardDeckApi } from './cardDeckApi';

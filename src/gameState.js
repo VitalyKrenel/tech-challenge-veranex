@@ -1,4 +1,4 @@
-import { createMachine, assign, choose } from 'xstate';
+import { createMachine, assign } from 'xstate';
 import { useMachine } from '@xstate/react';
 
 import { checkIsPlayableCardDeck } from 'domain/deckGameCases/checkIsPlayableCardDeck';
