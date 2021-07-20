@@ -1,8 +1,10 @@
 import { createMachine, assign } from 'xstate';
 import { useMachine } from '@xstate/react';
 
+import { checkIsPlayableCardDeck } from 'domain/deckGameCases/checkIsPlayableCardDeck';
+import { CardDeck } from 'domain/cardDeck';
+
 const DEFAULT_SCORE_INCREASE_ON_WIN = 1;
-const DEFAULT_DECK_SIZE = 52;
 
 const GameStateMessages = {
   IDLE: 'Ваша ставка',
@@ -11,7 +13,8 @@ const GameStateMessages = {
   GAME_COMPLETED: 'Ваш результат',
 }
 
-const checkCanPlay = (context) => context.remainingDeckSize > 0;
+// TODO: Expose current deck to gameStateMachine to provide valid deck
+const checkCanPlay = (context) => checkIsPlayableCardDeck({ remainingDeckSize: context.remainingDeckSize });
 
 const makeWinTurn = assign({
   userScore: (context) => context.userScore + DEFAULT_SCORE_INCREASE_ON_WIN,
@@ -26,7 +29,7 @@ const makeLoseTurn = assign({
 
 const completeGame = assign({
   gameStateMessage: (context) => `${GameStateMessages.GAME_COMPLETED}: ${context.userScore}`,
-  remainingDeckSize: (context) => 0,
+  remainingDeckSize: () => 0,
 });
 
 const cardDeckGameMachine = createMachine({
@@ -34,7 +37,7 @@ const cardDeckGameMachine = createMachine({
   initial: 'idle',
   context: {
     userScore: 0,
-    remainingDeckSize: DEFAULT_DECK_SIZE,
+    remainingDeckSize: CardDeck.DEFAULT_DECK_SIZE,
     gameStateMessage: GameStateMessages.IDLE,
   },
   states: {

@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { CardDeck } from 'domain/cardDeck';
+import { checkIsPlayableCardDeck } from 'domain/deckGameCases/checkIsPlayableCardDeck';
 
 const GameProgressMessageLayout = styled.p``;
 const GameRestartButton = styled.button`
@@ -14,7 +14,7 @@ const GameRestartButton = styled.button`
 
 const GameProgressMessage = ({ remainingDeckSize }) => (
   <GameProgressMessageLayout>
-    {CardDeck.checkIsPlayableCardDeck(remainingDeckSize) ? (
+    {checkIsPlayableCardDeck({ remainingDeckSize }) ? (
       <>Количество карт в колоде: {remainingDeckSize}</>
     ) : (
       <>
