@@ -74,11 +74,11 @@ const ActionButton = styled.button`
   color: ${actionButtonColor};
 `;
 
-const StakeRedActionButton = styled(ActionButton)`
+const BetRedActionButton = styled(ActionButton)`
   background-color: ${redActionButtonColor};
 `;
 
-const StakeBlackActionButton = styled(ActionButton)``;
+const BetBlackActionButton = styled(ActionButton)``;
 
 const useCardDeck = () => {
   const [isCardDeckFetching, setIsCardDeckFetching] = useState(true);
@@ -103,19 +103,24 @@ const useCardDeck = () => {
 
 const App = () => {
   const [lastDrawnCard, setLastDrawnCard] = useState(null);
+  const [isDrawing, setIsDrawing] = useState(false);
   const { cardDeckId, isCardDeckFetching } = useCardDeck();
 
   const [cardDeckGameCurrentState, sendEvent] = useCardDeckGameMachine();
   const { remainingDeckSize, gameStateMessage } = cardDeckGameCurrentState.context;
   console.log(cardDeckGameCurrentState.value);
 
-  const placeBetOnCardColor = async ({ playerChoiceCardColor } = {}) => {
-    if (checkIsDeckGameCompleted(cardDeckGameCurrentState)) {
-      return;
-    }
+  const isBetActionDisabled = isDrawing || checkIsDeckGameCompleted(cardDeckGameCurrentState);
 
+
+  const placeBetOnCardColor = async ({ playerChoiceCardColor } = {}) => {
+    // TODO: Replace isDrawing with 'DRAWING' state machine node.
+    // isDrawing preventing app crash when user bets when deck is empty
+    // but we don't know that as the last drawing request yet to be finished
+    setIsDrawing(true);
     const drawnCard = await CardDeckApi.drawCard({ cardDeckId });
     setLastDrawnCard(drawnCard);
+    setIsDrawing(false);
 
     if (checkDidPlayerBetWin(playerChoiceCardColor, drawnCard)) {
       sendEvent({ type: 'WIN' });
@@ -143,8 +148,18 @@ const App = () => {
           )}
         </GameCardContainer>
         <ActionButtonsContainer>
-          <StakeRedActionButton onClick={() => placeBetOnCardColor({ playerChoiceCardColor: 'RED' })}>Red</StakeRedActionButton>
-          <StakeBlackActionButton onClick={() => placeBetOnCardColor({ playerChoiceCardColor: 'BLACK' })}>Black</StakeBlackActionButton>
+          <BetRedActionButton
+            disabled={isBetActionDisabled}
+            onClick={() => placeBetOnCardColor({ playerChoiceCardColor: 'RED' })}
+          >
+            Red
+          </BetRedActionButton>
+          <BetBlackActionButton
+            disabled={isBetActionDisabled}
+            onClick={() => placeBetOnCardColor({ playerChoiceCardColor: 'BLACK' })}
+          >
+            Black
+          </BetBlackActionButton>
         </ActionButtonsContainer>
       </GameContainer>
       <GameProgressMessage remainingDeckSize={remainingDeckSize} onRestartClick={restartCardDeckGame} />
