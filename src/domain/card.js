@@ -27,6 +27,8 @@ const fromRawDeckWithCards = ({ cards }) => {
   const [card] = cards;
   const hasAnyDrawnCard = cards.length !== 0;
 
+  console.log({ drawnCardFromRaw: card });
+
   return hasAnyDrawnCard ? Card.fromRaw(card) : null;
 };
 

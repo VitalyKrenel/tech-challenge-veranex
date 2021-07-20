@@ -1,10 +1,14 @@
-import { createMachine, assign } from 'xstate';
+import { createMachine, assign, choose } from 'xstate';
 import { useMachine } from '@xstate/react';
 
 import { checkIsPlayableCardDeck } from 'domain/deckGameCases/checkIsPlayableCardDeck';
+
 import { CardDeck } from 'domain/cardDeck';
 
 const DEFAULT_SCORE_INCREASE_ON_WIN = 1;
+
+// Transient transition @see https://xstate.js.org/docs/guides/transitions.html#transient-transitions
+const TRANSINIENT_EVENT = '';
 
 const GameStateMessages = {
   IDLE: 'Ваша ставка',
@@ -14,7 +18,7 @@ const GameStateMessages = {
 }
 
 // TODO: Expose current deck to gameStateMachine to provide valid deck
-const checkCanPlay = (context) => checkIsPlayableCardDeck({ remainingDeckSize: context.remainingDeckSize });
+const checkCannotPlay = (context) => !checkIsPlayableCardDeck({ remainingDeckSize: context.remainingDeckSize });
 
 const makeWinTurn = assign({
   userScore: (context) => context.userScore + DEFAULT_SCORE_INCREASE_ON_WIN,
@@ -56,24 +60,19 @@ const cardDeckGameMachine = createMachine({
 
     turn_win: {
       on: {
+        [TRANSINIENT_EVENT]: [
+          { target: 'completed', cond: checkCannotPlay },
+        ],
         WIN: [
           {
             target: 'turn_win',
             actions: makeWinTurn,
-            cond: checkCanPlay,
-          },
-          {
-            target: 'completed',
           }
         ],
         LOSE: [
           {
             target: 'turn_lose',
-            actions: makeLoseTurn,
-            cond: checkCanPlay,
-          },
-          {
-            target: 'completed',
+            actions:  makeLoseTurn,
           }
         ],
       },
@@ -81,25 +80,20 @@ const cardDeckGameMachine = createMachine({
 
     turn_lose: {
       on: {
+        [TRANSINIENT_EVENT]: [
+          { target: 'completed', cond: checkCannotPlay },
+        ],
         WIN: [
           {
             target: 'turn_win',
             actions: makeWinTurn,
-            cond: checkCanPlay,
-          },
-          {
-            target: 'completed',
-          },
+          }
         ],
         LOSE: [
           {
             target: 'turn_lose',
             actions: makeLoseTurn,
-            cond: checkCanPlay,
-          },
-          {
-            target: 'completed',
-          },
+          }
         ],
       }
     },

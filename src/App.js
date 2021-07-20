@@ -9,6 +9,8 @@ import { LoadingIndicator } from './components/LoadingIndicator';
 import { AppLayout } from './components/AppLayout';
 import { GameProgressMessage } from './components/GameProgressMessage';
 
+import { checkIsDeckGameCompleted } from 'domain/deckGameCases/checkIsDeckGameCompleted';
+
 const GameContainer = styled.div`
   width: 226px;
 `;
@@ -103,15 +105,19 @@ const App = () => {
   const [lastDrawnCard, setLastDrawnCard] = useState(null);
   const { cardDeckId, isCardDeckFetching } = useCardDeck();
 
-  const [currentState, sendEvent] = useCardDeckGameMachine();
-  const { remainingDeckSize, gameStateMessage } = currentState.context;
-  console.log(currentState, remainingDeckSize)
+  const [cardDeckGameCurrentState, sendEvent] = useCardDeckGameMachine();
+  const { remainingDeckSize, gameStateMessage } = cardDeckGameCurrentState.context;
+  console.log(cardDeckGameCurrentState)
 
-  const chooseCard = async ({ cardColor } = {}) => {
+  const placeBetOnCardColor = async ({ playerChoiceCardColor } = {}) => {
+    if (checkIsDeckGameCompleted(cardDeckGameCurrentState)) {
+      return;
+    }
+
     const drawnCard = await CardDeckApi.drawCard({ cardDeckId });
     setLastDrawnCard(drawnCard);
 
-    if (checkDidPlayerBetWin(cardColor, drawnCard)) {
+    if (checkDidPlayerBetWin(playerChoiceCardColor, drawnCard)) {
       sendEvent({ type: 'WIN' });
       return;
     }
@@ -129,8 +135,8 @@ const App = () => {
           <GameCard src={lastDrawnCard?.imageSource}/>
         </GameCardContainer>
         <ActionButtonsContainer>
-          <StakeRedActionButton onClick={() => chooseCard({ cardColor: 'RED' })}>Red</StakeRedActionButton>
-          <StakeBlackActionButton onClick={() => chooseCard({ cardColor: 'BLACK' })}>Black</StakeBlackActionButton>
+          <StakeRedActionButton onClick={() => placeBetOnCardColor({ playerChoiceCardColor: 'RED' })}>Red</StakeRedActionButton>
+          <StakeBlackActionButton onClick={() => placeBetOnCardColor({ playerChoiceCardColor: 'BLACK' })}>Black</StakeBlackActionButton>
         </ActionButtonsContainer>
       </GameContainer>
       <GameProgressMessage remainingDeckSize={remainingDeckSize}/>
