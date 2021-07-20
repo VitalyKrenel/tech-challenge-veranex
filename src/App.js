@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import styled, { css } from 'styled-components';
 import { useCardDeckGameMachine } from './gameState';
 import { CardDeckApi } from './cardDeckApi';
@@ -107,7 +107,7 @@ const App = () => {
 
   const [cardDeckGameCurrentState, sendEvent] = useCardDeckGameMachine();
   const { remainingDeckSize, gameStateMessage } = cardDeckGameCurrentState.context;
-  console.log(cardDeckGameCurrentState)
+  console.log(cardDeckGameCurrentState.value);
 
   const placeBetOnCardColor = async ({ playerChoiceCardColor } = {}) => {
     if (checkIsDeckGameCompleted(cardDeckGameCurrentState)) {
@@ -125,6 +125,12 @@ const App = () => {
     sendEvent({ type: 'LOSE' });
   }
 
+  const restartCardDeckGame = async () => {
+    setLastDrawnCard(null);
+    await CardDeckApi.shuffleCardDeck({ cardDeckId });
+    sendEvent({ type: 'RESET' })
+  };
+
   return (
     <AppLayout loadingComponent={LoadingIndicator} isAppLoading={isCardDeckFetching}>
       <GameContainer>
@@ -132,14 +138,16 @@ const App = () => {
           {gameStateMessage}
         </GameStateLabel>
         <GameCardContainer shouldUsePlaceholder={lastDrawnCard === null}>
-          <GameCard src={lastDrawnCard?.imageSource}/>
+          {lastDrawnCard && (
+            <GameCard src={lastDrawnCard.imageSource}/>
+          )}
         </GameCardContainer>
         <ActionButtonsContainer>
           <StakeRedActionButton onClick={() => placeBetOnCardColor({ playerChoiceCardColor: 'RED' })}>Red</StakeRedActionButton>
           <StakeBlackActionButton onClick={() => placeBetOnCardColor({ playerChoiceCardColor: 'BLACK' })}>Black</StakeBlackActionButton>
         </ActionButtonsContainer>
       </GameContainer>
-      <GameProgressMessage remainingDeckSize={remainingDeckSize}/>
+      <GameProgressMessage remainingDeckSize={remainingDeckSize} onRestartClick={restartCardDeckGame} />
     </AppLayout>
   )
 };

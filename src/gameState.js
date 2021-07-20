@@ -36,13 +36,21 @@ const completeGame = assign({
   remainingDeckSize: () => 0,
 });
 
+const defaultGameContext = {
+  userScore: 0,
+  remainingDeckSize: CardDeck.DEFAULT_DECK_SIZE,
+  gameStateMessage: GameStateMessages.IDLE,
+};
+
 const cardDeckGameMachine = createMachine({
   id: 'card-deck',
   initial: 'idle',
-  context: {
-    userScore: 0,
-    remainingDeckSize: CardDeck.DEFAULT_DECK_SIZE,
-    gameStateMessage: GameStateMessages.IDLE,
+  context: defaultGameContext,
+  on: {
+    RESET: {
+      target: '.idle',
+      actions: assign(() => defaultGameContext),
+    }
   },
   states: {
     idle: {
@@ -99,14 +107,15 @@ const cardDeckGameMachine = createMachine({
     },
 
     completed: {
-      type: 'final',
       entry: completeGame,
     }
   }
 });
 
 const useCardDeckGameMachine = () => {
-  return useMachine(cardDeckGameMachine);
+  const [currentGameState, sendEvent] = useMachine(cardDeckGameMachine);
+
+  return [currentGameState, sendEvent]
 }
 
 export { cardDeckGameMachine, useCardDeckGameMachine };

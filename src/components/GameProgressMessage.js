@@ -12,7 +12,7 @@ const GameRestartButton = styled.button`
   font-style: italic;
 `;
 
-const GameProgressMessage = ({ remainingDeckSize }) => (
+const GameProgressMessage = ({ remainingDeckSize, onRestartClick }) => (
   <GameProgressMessageLayout>
     {checkIsPlayableCardDeck({ remainingDeckSize }) ? (
       <>Количество карт в колоде: {remainingDeckSize}</>
@@ -20,7 +20,7 @@ const GameProgressMessage = ({ remainingDeckSize }) => (
       <>
         Колода пуста.
         {' '}
-        <GameRestartButton>Начать заново?</GameRestartButton>
+        <GameRestartButton onClick={onRestartClick}>Начать заново?</GameRestartButton>
       </>
     )}
   </GameProgressMessageLayout>
